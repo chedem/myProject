@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx-3.1.xsd 
+						http://www.springframework.org/schema/jee 
+						http://www.springframework.org/schema/jee/spring-jee-3.1.xsd 
+						http://www.springframework.org/schema/aop 
+						http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+						http://www.springframework.org/schema/context 
+						http://www.springframework.org/schema/context/spring-context-3.1.xsd"
+	default-lazy-init="true" default-autowire="byName">
+	<!--1. 延迟加载  bean -->
+	
+	<!--2. IOC Annotaion /Service/Repository/Controller/component -->
+	<context:component-scan base-package="com"/>
+	
+		<!-- jdbc.properties 加载属性配置	
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+	 -->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!--3. 配置   dbcp第三方数据源    C3P0  -->
+	<bean id="dataSource1" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}"></property>
+		<property name="username" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+
+		<property name="initialSize" value="10" />
+		<property name="maxActive" value="50" />
+		<property name="maxIdle" value="10" />
+		<property name="maxWait" value="500" />
+		<property name="defaultAutoCommit" value="false" />
+	</bean>
+	
+	 <bean id="dataSource2" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver1}" />
+		<property name="url" value="${jdbc.url1}"></property>
+		<property name="username" value="${jdbc.username1}"></property>
+		<property name="password" value="${jdbc.password1}"></property>
+
+		<property name="initialSize" value="10" />
+		<property name="maxActive" value="50" />
+		<property name="maxIdle" value="10" />
+		<property name="maxWait" value="500" />
+		<property name="defaultAutoCommit" value="false" />
+	</bean>
+	
+	 <bean id="dataSource3" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver2}" />
+		<property name="url" value="${jdbc.url2}"></property>
+		<property name="username" value="${jdbc.username2}"></property>
+		<property name="password" value="${jdbc.password2}"></property>
+
+		<property name="initialSize" value="10" />
+		<property name="maxActive" value="50" />
+		<property name="maxIdle" value="10" />
+		<property name="maxWait" value="500" />
+		<property name="defaultAutoCommit" value="false" />
+	</bean>
+	
+    <!-- 编写spring 配置文件的配置多数源映射关系 -->  
+     <bean id="dataSource" class="com.common.dao.DynamicDataSource">  
+        <property name="targetDataSources">  
+            <map key-type="java.lang.String">  
+                <entry key="MySql" value-ref="dataSource1"></entry>  
+                <entry key="Sybase" value-ref="dataSource2"></entry>  
+                <entry key="Oracle" value-ref="dataSource3"></entry>  
+            </map>  
+        </property>
+        <property name="defaultTargetDataSource" ref="dataSource1"></property>  
+    </bean>
+    
+	<!--4. 配置 连接工厂    Hibernate -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!-- 包路径扫描 -->
+		<property name="packagesToScan">
+			<list>
+				<!-- 所有bean 都扫描 -->
+				<value>com.**.bean</value>
+			</list>
+		</property>
+		<!-- Hibernate -->
+		<property name="hibernateProperties">
+			<props>
+				<!-- hibernate 方言 -->
+				<prop key="hibernate.dialect">
+					${hibernate.dialect}
+				</prop>
+				<!-- hibernate 自动生成 SQL语句 -->
+				<prop key="hibernate.show_sql">
+					${hibernate.show_sql}
+				</prop>
+<!-- 				hibernate	自动格式化sql语句 -->
+				<prop key="hibernate.format_sql">
+					${hibernate.format_sql}
+				</prop>
+				<!-- hibernate 自动执行DDL（数据库定义语言） -->
+<!-- 				<prop key="hibernate.hbm2ddl.auto">
+-->				<prop key="hbm2ddl.auto">
+ 					${hibernate.hbm2ddl.auto}
+				</prop>
+				<!-- 使用Session session = sessionFactory.openSession();执行commit后自动关闭session -->
+		<!-- 		<prop key="hibernate.transaction.auto_close_session">
+ 					true
+				</prop> -->
+			<!-- 	<prop key="current_session_context_class">jta</prop>-->
+				<prop key="hibernate.connection.autocommit">true</prop> 
+			</props>
+		</property>
+	</bean>
+	
+	<!-- 5. [事务管理] -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory"  ref="sessionFactory" />
+	</bean>
+	
+	<!-- 6. 通知AOP- 将[事务管理]切入[事务通知]  -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="edit*" propagation="REQUIRED" />
+			<tx:method name="modify*" propagation="REQUIRED" />
+			<tx:method name="remove*" propagation="REQUIRED" />
+			<tx:method name="upd*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+			<tx:method name="batchUpdate" propagation="REQUIRED" />
+<!-- 			<tx:method name="*" propagation="REQUIRED" read-only="true" />  
+ -->			
+			<tx:method name="*" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="targetMethod" expression="execution(* com.yrkj..service.*Impl.*(..))"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="targetMethod"/>	
+	</aop:config>
+	
+	<bean name="SqlInjectFilter" class="com.common.filter.SqlInjectFilter" ></bean>  
+	<bean name="SessionFilter" class="com.common.filter.SessionFilter" ></bean>
+	
+</beans>

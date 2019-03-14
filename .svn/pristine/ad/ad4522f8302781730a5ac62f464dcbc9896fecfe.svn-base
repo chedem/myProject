@@ -1,0 +1,53 @@
+boby{
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	overflow-y:none !important;
+	
+}
+
+.rowbg {
+	background-color: #faf9f9;
+}
+
+.errorConfirm {
+	font-size: 12px;
+	color: #FF2222;
+}
+
+#selOrPower {
+	height: 500px;
+	position: relative;
+	overflow: hidden;
+}
+
+#selOrPower table {
+	/* width: 80%; */
+	/* height: 500px; */
+	/* overflow: hidden; */
+	overflow-y:auto;
+}
+.tableDiv{
+	width: 80%;
+	height: 500px;
+	overflow: hidden;
+	overflow-y:auto;
+}
+#powerSet {
+	border: 1px solid #ddd;
+	width: 200px;
+	height: 500px;
+	position: absolute;
+	right: 10px;
+	top: 0;
+}
+
+#powerSet div {
+	font-size: 16px;
+	padding: 10px;
+}
+
+#powerSet div:last-of-type {
+	position: absolute;
+	bottom: 30px;
+}
